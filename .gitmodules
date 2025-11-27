@@ -1,0 +1,3 @@
+[submodule "FreeRTOS_PC_Scheduler/FreeRTOS"]
+	path = FreeRTOS_PC_Scheduler/FreeRTOS
+	url = https://github.com/FreeRTOS/FreeRTOS-Kernel
