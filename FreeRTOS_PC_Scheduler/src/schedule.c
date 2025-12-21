@@ -14,7 +14,7 @@ void loadTasksFromFile(const char *filename) {
                  &allTasks[globalTaskCount].arrivalTime,
                  &allTasks[globalTaskCount].priority,
                  &allTasks[globalTaskCount].burstTime) != EOF) {
-        snprintf(allTasks[globalTaskCount].taskName, sizeof(allTasks[globalTaskCount].taskName), "T%d", globalTaskCount+1);
+        snprintf(allTasks[globalTaskCount].taskName, sizeof(allTasks[globalTaskCount].taskName), "T%d", globalTaskCount);
         allTasks[globalTaskCount].remainingTime = allTasks[globalTaskCount].burstTime;
         allTasks[globalTaskCount].handle = NULL;
         allTasks[globalTaskCount].queuedTime = -1;
