@@ -1,3 +1,8 @@
+/*
+ * DOSYA: main.c
+ * SORUMLU: Kişi 4 (Entegrasyon & Config)
+ * AÇIKLAMA: Sistemi başlatan, kuyrukları ve görevleri oluşturan ana dosya.
+ */
 #include <stdio.h>
 #include "FreeRTOS.h"
 #include "task.h"
@@ -16,6 +21,18 @@ TaskData_t allTasks[MAX_TASKS];
 int globalTaskCount = 0;
 
 QueueHandle_t xQueue0, xQueue1, xQueue2, xQueue3;
+/* [ENTEGRASYON EKLEMESİ]
+ * schedule.h dosyasında 'extern' olarak belirtilen değişkenlerin
+ * bellekte fiziksel olarak oluşturulması (Allocation) burada yapılır.
+ * Bu kısım olmazsa "undefined reference" hatası alırsınız.
+ */
+//TaskData_t allTasks[MAX_TASKS]; // schedule.h'daki MAX_TASKS kullanılır
+//int globalTaskCount = 0;
+
+//QueueHandle_t xQueue0;
+//QueueHandle_t xQueue1;
+//QueueHandle_t xQueue2;
+//QueueHandle_t xQueue3;
 
 extern void vSchedulerTask(void *pvParameters);
 extern void vGenericTask(void *pvParameters);

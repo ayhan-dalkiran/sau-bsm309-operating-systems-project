@@ -1,3 +1,16 @@
+/* DOSYA: tasks.c
+ * DURUM: GUNCEL GOREV DAGILIMINA UYGUN VE HATA DUZELTMELI
+ * DİKKAT: Bu dosya projenin ana iskeletidir. 
+ * Kişi 1 ve Kişi 2 kendi kodlarını buradaki ilgili blokların içine entegre etmiştir.
+ */
+
+/* ----------------- INCLUDE SIRALAMASI ÖNEMLİDİR ----------------- */
+#include "FreeRTOS.h"   // 1. Önce Ana FreeRTOS kütüphanesi
+#include "task.h"       // 2. Sonra Task kütüphanesi
+#include "queue.h"      // 3. Kuyruk fonksiyonları için
+#include "semphr.h"     // 4. Mutex ve Semaforlar için
+
+#include "schedule.h"   // 5. Proje özel kütüphanesi (TaskData_t vb. burada)
 #include <stdio.h>
 #include "FreeRTOS.h"
 #include "task.h"
