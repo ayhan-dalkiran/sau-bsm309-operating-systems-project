@@ -62,7 +62,7 @@ void vSchedulerTask(void *pvParameters) {
         for(int i = 0; i < globalTaskCount; i++) {
             if(allTasks[i].handle != NULL && allTasks[i].remainingTime > 0) {
                 if(simTime - allTasks[i].queuedTime >= 20) {
-                    printf("%s%d.0000 sn Task%d proses zaman aşımı    (id: %04d    öncelik: %d    kalan süre: %d sn)%s\n", 
+                    printf("%s%02d.0000 sn Task%02d proses zaman aşımı   (id: %04d    öncelik: %d    kalan süre: %d sn)%s\n", 
                            allTasks[i].pcColorCode, simTime, atoi(allTasks[i].taskName) + 1, atoi(allTasks[i].taskName), allTasks[i].priority, allTasks[i].remainingTime, ANSI_COLOR_RESET);
                     
                     vTaskDelete(allTasks[i].handle);
@@ -95,10 +95,10 @@ void vSchedulerTask(void *pvParameters) {
             // Eğer görev zaman aşımına uğrayıp SİLİNMEDİYSE çalıştır
             if(selectedTask && selectedTask->handle != NULL && selectedTask->remainingTime > 0) {
                 if(selectedTask->remainingTime == selectedTask->burstTime) {
-                    printf("%s%d.0000 sn Task%d proses başladı       (id: %04d    öncelik: %d    kalan süre: %d sn)%s\n", 
+                    printf("%s%02d.0000 sn Task%02d proses başladı       (id: %04d    öncelik: %d    kalan süre: %d sn)%s\n", 
                             selectedTask->pcColorCode, simTime, atoi(selectedTask->taskName) + 1, atoi(selectedTask->taskName), selectedTask->priority, selectedTask->remainingTime, ANSI_COLOR_RESET);
                 } else {
-                    printf("%s%d.0000 sn Task%d proses devam         (id: %04d    öncelik: %d    kalan süre: %d sn)%s\n", 
+                    printf("%s%02d.0000 sn Task%02d proses devam         (id: %04d    öncelik: %d    kalan süre: %d sn)%s\n", 
                            selectedTask->pcColorCode, simTime, atoi(selectedTask->taskName) + 1, atoi(selectedTask->taskName), selectedTask->priority, selectedTask->remainingTime, ANSI_COLOR_RESET);
                 }
 
@@ -107,7 +107,7 @@ void vSchedulerTask(void *pvParameters) {
                 selectedTask->queuedTime = simTime + 1; // Başarılı çalışma, 20sn hakkını yeniledi
 
                 if(selectedTask->remainingTime <= 0) {
-                    printf("%s%d.0000 sn Task%d proses sonlandı      (id: %04d    öncelik: %d    kalan süre: %d sn)%s\n", 
+                    printf("%s%02d.0000 sn Task%02d proses sonlandı      (id: %04d    öncelik: %d    kalan süre: %d sn)%s\n", 
                            selectedTask->pcColorCode, simTime + 1, atoi(selectedTask->taskName) + 1,  atoi(selectedTask->taskName), selectedTask->priority, 0, ANSI_COLOR_RESET);
                     vTaskDelete(selectedTask->handle);
                     selectedTask->handle = NULL;
@@ -116,7 +116,7 @@ void vSchedulerTask(void *pvParameters) {
                     if(selectedQueueIndex != 0) {
                         int eskiOncelik = selectedTask->priority;
                         selectedTask->priority++;
-                        printf("%s%d.0000 sn Task%d proses askıya al     (id: %04d    öncelik: %d    kalan süre: %d sn)%s\n", 
+                        printf("%s%02d.0000 sn Task%02d proses askıda        (id: %04d    öncelik: %d    kalan süre: %d sn)%s\n", 
                                selectedTask->pcColorCode, simTime + 1, atoi(selectedTask->taskName) + 1, atoi(selectedTask->taskName), selectedTask->priority, selectedTask->remainingTime, ANSI_COLOR_RESET);
                     }
                     xQueueSend(getQueueByPriority(selectedTask->priority), selectedTask, 0);
@@ -132,5 +132,3 @@ void vSchedulerTask(void *pvParameters) {
         simTime++;
     }
 }
-
-
