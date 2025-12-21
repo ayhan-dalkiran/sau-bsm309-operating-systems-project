@@ -19,16 +19,17 @@
 // GÖREV YAPISI (Struct)
 // giris.txt dosyasındaki her satır bu yapıya dönüştürülecek.
 typedef struct {
-    char taskName[10];  // Görev Adı (T1, T2 vb.)
-    int arrivalTime;    // Varış Zamanı
-    int priority;       // Öncelik (0: RealTime, 1, 2, 3: User)
-    int burstTime;      // Toplam Çalışma Süresi
-    int remainingTime;  // Kalan Süre (Simülasyon sırasında azalacak)
-    TaskHandle_t handle; // FreeRTOS Task Handle'ı (Kontrol için)
+    char taskName[10];      // Görev Adı (T1, T2 vb.)
+    char* pcColorCode;      // <-- EKLENDİ: Renkli çıktı için gerekli (tasks.c hata vermesin diye)
+    int arrivalTime;        // Varış Zamanı
+    int priority;           // Öncelik (0: RealTime, 1, 2, 3: User)
+    int burstTime;          // Toplam Çalışma Süresi
+    int remainingTime;      // Kalan Süre (Simülasyon sırasında azalacak)
+    TaskHandle_t handle;    // FreeRTOS Task Handle'ı (Kontrol için)
 } TaskData_t;
 
 // GLOBAL DEĞİŞKENLER (Extern ile diğer dosyalara "burada var" diyoruz)
-// Tanımlamaları schedule.c içinde yapılacak.
+// Tanımlamaları main.c içinde yapıldı.
 extern QueueHandle_t xQueue0; // Real-Time (FCFS)
 extern QueueHandle_t xQueue1; // High (User - Feedback)
 extern QueueHandle_t xQueue2; // Medium (User - Feedback)
