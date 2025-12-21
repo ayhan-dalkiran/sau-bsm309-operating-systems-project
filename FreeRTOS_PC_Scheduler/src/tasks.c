@@ -36,7 +36,7 @@ void vSchedulerTask(void *pvParameters) {
                 if(q){
                     xQueueSend(q, &allTasks[i], 0);
                     allTasks[i].queuedTime = simTime; // Kuyruğa eklendiği zamanı kaydet
-                    printf("[%d sn] Yeni Görev Eklendi: %s (P%d)\n", simTime, allTasks[i].taskName, allTasks[i].priority);
+                    printf("%s%d.0000 sn proses başladı       (id:%s    öncelik:%d    kalan süre:%d sn)%s\n", allTasks[i].pcColorCode, simTime, allTasks[i].taskName, allTasks[i].priority, allTasks[i].remainingTime, ANSI_COLOR_RESET);
                 }
             }
         }
@@ -72,17 +72,19 @@ void vSchedulerTask(void *pvParameters) {
                 }
             }
         } else {
-            printf("[%d sn] CPU Bosta (Idle)\n", simTime);
+            //printf("[%d sn] CPU Bosta (Idle)\n", simTime);
             vTaskDelay(pdMS_TO_TICKS(1000));
         }
 
         // 4. Kuyrukta 20sn bekleyen taskları drop et
         for(int i=0;i<globalTaskCount;i++){
-            if(allTasks[i].handle && allTasks[i].remainingTime>0 &&
-               allTasks[i].queuedTime >=0 &&
-               simTime - allTasks[i].queuedTime >= 20){
-                printf("[%d sn] %s DROP: 20 sn bekledi\n", simTime, allTasks[i].taskName);
-                vTaskDelete(allTasks[i].handle);
+            TaskData_t task = allTasks[i];
+
+            if(task.handle && task.remainingTime>0 &&
+               task.queuedTime >=0 &&
+               simTime - task.queuedTime >= 20){
+                printf("%s%d.0000 sn proses zamanaşımı    (id:%s    öncelik:%d    kalan süre:%d sn)%s\n", task.pcColorCode, simTime, task.taskName, task.priority, task.remainingTime, ANSI_COLOR_RESET);
+                vTaskDelete(task.handle);
                 allTasks[i].handle = NULL;
             }
         }
@@ -99,12 +101,11 @@ void vGenericTask(void *pvParameters){
         ulTaskNotifyTake(pdTRUE, portMAX_DELAY);
 
         if(task->remainingTime>0){
-            printf("[%d sn]%s%s calisiyor. Kalan Sure: %d sn%s\n",
-                simTime,task->pcColorCode, task->taskName, task->remainingTime, ANSI_COLOR_RESET);
+            printf("%s%d.0000 sn proses yürütülüyor   (id:%s    öncelik:%d    kalan süre:%d sn)%s\n", task->pcColorCode, simTime, task->taskName, task->priority, task->remainingTime, ANSI_COLOR_RESET);
         }
 
         if(task->remainingTime<=0){
-            printf("[%d sn]%s%s TAMAMLANDI%s\n", simTime, task->pcColorCode, task->taskName, ANSI_COLOR_RESET);
+            printf("%s%d.0000 sn proses sonlandı      (id:%s    öncelik:%d    kalan süre:%d sn)%s\n", task->pcColorCode, simTime, task->taskName, task->priority, task->remainingTime, ANSI_COLOR_RESET);
             vTaskDelete(NULL);
         }
     }
