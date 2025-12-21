@@ -1,5 +1,5 @@
 # --- PROJE AYARLARI ---
-TARGET = scheduler_sim
+TARGET = freertos_sim
 CC = gcc
 CFLAGS = -Wall -Wextra -g -DPROJ_COVERAGE_DIST
 

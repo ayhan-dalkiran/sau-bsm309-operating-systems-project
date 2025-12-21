@@ -21,18 +21,6 @@ TaskData_t allTasks[MAX_TASKS];
 int globalTaskCount = 0;
 
 QueueHandle_t xQueue0, xQueue1, xQueue2, xQueue3;
-/* [ENTEGRASYON EKLEMESİ]
- * schedule.h dosyasında 'extern' olarak belirtilen değişkenlerin
- * bellekte fiziksel olarak oluşturulması (Allocation) burada yapılır.
- * Bu kısım olmazsa "undefined reference" hatası alırsınız.
- */
-//TaskData_t allTasks[MAX_TASKS]; // schedule.h'daki MAX_TASKS kullanılır
-//int globalTaskCount = 0;
-
-//QueueHandle_t xQueue0;
-//QueueHandle_t xQueue1;
-//QueueHandle_t xQueue2;
-//QueueHandle_t xQueue3;
 
 extern void vSchedulerTask(void *pvParameters);
 extern void vGenericTask(void *pvParameters);
@@ -46,19 +34,31 @@ int main(void) {
         xSemaphoreGive(xPrintMutex);
     }
 
+    // main.c içindeki bu kısmı şu hale getirin:
     loadTasksFromFile("giris.txt");
 
+    // KUYRUKLARI OLUŞTUR (Burası aynı kalacak)
     xQueue0 = xQueueCreate(10, sizeof(TaskData_t));
     xQueue1 = xQueueCreate(10, sizeof(TaskData_t));
     xQueue2 = xQueueCreate(10, sizeof(TaskData_t));
     xQueue3 = xQueueCreate(10, sizeof(TaskData_t));
 
-    if(!xQueue0 || !xQueue1 || !xQueue2 || !xQueue3) {
-        printf("HATA: Kuyruklar olusturulamadi!\n");
-        return -1;
+    // Renkleri önceden atayabilirsiniz ama xTaskCreate'i buradan kaldırın:
+    for(int i=0; i<globalTaskCount; i++) {
+        char* color;
+        switch(i%4){
+            case 0: color=COLOR_RED; break;
+            case 1: color=COLOR_GREEN; break;
+            case 2: color=COLOR_BLUE; break;
+            case 3: color=COLOR_YELLOW; break;
+        }
+        allTasks[i].pcColorCode = color;
+        allTasks[i].handle = NULL; // Henüz yaratılmadığını işaretle
     }
 
+    // Sadece Scheduler'ı başlatın
     xTaskCreate(vSchedulerTask, "Scheduler", configMINIMAL_STACK_SIZE*2, NULL, tskIDLE_PRIORITY + 2, NULL);
+    vTaskStartScheduler();
 
     for(int i=0; i<globalTaskCount; i++) {
         char* color;

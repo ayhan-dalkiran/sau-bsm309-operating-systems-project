@@ -14,7 +14,7 @@ void loadTasksFromFile(const char *filename) {
                  &allTasks[globalTaskCount].arrivalTime,
                  &allTasks[globalTaskCount].priority,
                  &allTasks[globalTaskCount].burstTime) != EOF) {
-        snprintf(allTasks[globalTaskCount].taskName, sizeof(allTasks[globalTaskCount].taskName), "T%d", globalTaskCount);
+        snprintf(allTasks[globalTaskCount].taskName, sizeof(allTasks[globalTaskCount].taskName), "%d", globalTaskCount);
         allTasks[globalTaskCount].remainingTime = allTasks[globalTaskCount].burstTime;
         allTasks[globalTaskCount].handle = NULL;
         allTasks[globalTaskCount].queuedTime = -1;
@@ -42,6 +42,6 @@ void decreaseTaskPriority(TaskData_t *task, int simTime) {
     if(q) {
         task->queuedTime = simTime; // Kuyruğa yeniden eklendi, 20sn drop timer sıfırlandı
         xQueueSend(q, task, 0);
-        printf("%s%d.0000 sn proses askıda        (id:%s    öncelik:%d    kalan süre:%d sn)%s\n", task->pcColorCode, simTime, task->taskName, task->priority, task->remainingTime, ANSI_COLOR_RESET);
+        printf("%s%d.0000 sn proses askıda        (id: %04d    öncelik: %d    kalan süre: %d sn)%s\n", task->pcColorCode, simTime, atoi(task->taskName), task->priority, task->remainingTime, ANSI_COLOR_RESET);
     }
 }
