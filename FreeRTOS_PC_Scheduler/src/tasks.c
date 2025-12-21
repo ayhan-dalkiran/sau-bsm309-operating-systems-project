@@ -6,23 +6,19 @@
 
 /* ----------------- INCLUDE SIRALAMASI ÖNEMLİDİR ----------------- */
 #include "FreeRTOS.h"   // 1. Önce Ana FreeRTOS kütüphanesi
-#include "task.h"       // 2. Sonra Task kütüphanesi
+#include "task.h"       // 2. Sonra Task kütüphanesi (TickType_t burada tanınır)
 #include "queue.h"      // 3. Kuyruk fonksiyonları için
 #include "semphr.h"     // 4. Mutex ve Semaforlar için
 
-#include "schedule.h"   // 5. Proje özel kütüphanesi (TaskData_t vb. burada)
+#include "schedule.h"   // 5. En son proje özel kütüphaneniz
 #include <stdio.h>
 
-/* Renk Kodları (Eğer schedule.h içinde yoksa diye güvenlik amacıyla) */
-#ifndef ANSI_COLOR_RESET
-#define ANSI_COLOR_RESET   "\x1b[0m"
-#endif
-
 /* ---------------------------------------------------------------- */
-/* KİŞİ 1'İN ALANI                                                  */
-/* (SCHEDULER / ZAMANLAYICI)                                        */
+/* KİŞİ 1'İN ALANI                          */
+/* (SCHEDULER / ZAMANLAYICI)                     */
 /* ---------------------------------------------------------------- */
 /* GÖREV: Hangi taskın çalışacağına karar veren 'vSchedulerTask'    */
+/* fonksiyonunu buraya yazacak.                              */
 /* ---------------------------------------------------------------- */
 
 void vSchedulerTask(void *pvParameters) {
@@ -42,6 +38,7 @@ void vSchedulerTask(void *pvParameters) {
         /* ---------------------------------------------------------------
          * ADIM 1: ZAMANI GELEN GÖREVLERİ İLGİLİ KUYRUKLARA EKLE
          * --------------------------------------------------------------- */
+        // globalTaskCount, schedule.c/h içinde tanımlı olmalı ve okunmuş olmalı
         for(int i = 0; i < globalTaskCount; i++) {
             if(allTasks[i].arrivalTime == simTime) {
                 // Önceliğe göre doğru FreeRTOS kuyruğunu seç
@@ -56,6 +53,7 @@ void vSchedulerTask(void *pvParameters) {
 
                 if(targetQueue != NULL) {
                     // Kuyruğa, task verisinin bir kopyasını gönderiyoruz
+                    // portMAX_DELAY yerine 0 kullanıyoruz ki scheduler beklemesin
                     xQueueSend(targetQueue, &allTasks[i], 0);
                     printf("[%d sn] Yeni Gorev Eklendi: %s (P%d)\n", simTime, allTasks[i].taskName, allTasks[i].priority);
                 }
@@ -70,6 +68,7 @@ void vSchedulerTask(void *pvParameters) {
         selectedQueueIndex = -1;
 
         // -- Q0 KONTROL (Real-Time / FCFS / Non-Preemptive) --
+        // Q0'daki görev bitene kadar kuyruktan SİLİNMESİN (Peek yapıyoruz)
         if(xQueuePeek(xQueue0, &currentTaskData, 0) == pdTRUE) {
             selectedQueueIndex = 0;
         }
@@ -90,8 +89,11 @@ void vSchedulerTask(void *pvParameters) {
          * ADIM 3: GÖREVİ ÇALIŞTIR, YÖNET VE GERİ BESLEME YAP
          * --------------------------------------------------------------- */
         if(selectedQueueIndex != -1) {
+            // FreeRTOS Kuyruğundan aldığımız veri 'kopya'dır. 
             // Orijinal global dizideki (allTasks) veriyi bulup güncelleyeceğiz.
+            // Bu sayede remainingTime vb. her yerde tutarlı kalır.
             for(int k = 0; k < globalTaskCount; k++) {
+                // TaskHandle_t ile eşleşen orijinal görevi bul
                 if(allTasks[k].handle == currentTaskData.handle) {
                     selectedTaskPtr = &allTasks[k];
                     break;
@@ -101,9 +103,11 @@ void vSchedulerTask(void *pvParameters) {
 
         if(selectedTaskPtr != NULL) {
             // 1. İşçi Göreve (GenericTask) "Uyan ve Çalış" sinyali gönder
+            // xTaskNotifyGive, hedef görevin bloğunu kaldırır.
             xTaskNotifyGive(selectedTaskPtr->handle);
 
             // 2. Bir Simülasyon Saniyesi (Tick) kadar bekle
+            // Bu sırada vGenericTask çalışacak ve ekrana yazacak.
             vTaskDelay(pdMS_TO_TICKS(1000));
 
             // 3. Görevin kalan süresini azalt
@@ -111,19 +115,21 @@ void vSchedulerTask(void *pvParameters) {
 
             // 4. Görev Bitti mi?
             if(selectedTaskPtr->remainingTime <= 0) {
-                // Not: Bitiş mesajını vGenericTask içinde de bastırabiliriz,
-                // ama burada kontrol etmek flow açısından daha güvenlidir.
+                printf("[%d sn] GOREV BITTI: %s\n", simTime+1, selectedTaskPtr->taskName);
                 
                 // Eğer Real-Time (Q0) görevi bittiyse, şimdi kuyruktan gerçekten silebiliriz.
                 if(selectedQueueIndex == 0) {
                     TaskData_t dummy;
                     xQueueReceive(xQueue0, &dummy, 0);
                 }
+                // Kendini vGenericTask içinde silecek veya burada handle edilecek.
+                // Proje formatına göre task tekrar kuyruğa girmez.
             } 
             else {
                 // --- GÖREV BİTMEDİ (Feedback Mantığı) ---
                 if(selectedQueueIndex == 0) {
-                    // Real-Time (Q0): Kuyrukta kalmaya devam eder (Peek yapıldı)
+                    // Real-Time (Q0): Kuyruktan çıkarmadık (Peek), o yüzden en başta duruyor.
+                    // Bir şey yapmaya gerek yok, sonraki döngüde yine o seçilecek (FCFS & Non-Preemptive).
                 }
                 else if(selectedQueueIndex == 1) {
                     // Q1 -> Q2'ye düşür
@@ -136,13 +142,13 @@ void vSchedulerTask(void *pvParameters) {
                     xQueueSend(xQueue3, selectedTaskPtr, 0);
                 }
                 else if(selectedQueueIndex == 3) {
-                    // Q3 -> Q3 (Round Robin mantığı)
+                    // Q3 -> Q3 (Round Robin mantığı: Kuyruğun sonuna tekrar ekle)
                     xQueueSend(xQueue3, selectedTaskPtr, 0);
                 }
             }
         } 
         else {
-            // Idle Durumu
+            // Hiçbir kuyrukta görev yoksa CPU boştadır (Idle)
             printf("[%d sn] CPU Bosta (Idle)\n", simTime);
             vTaskDelay(pdMS_TO_TICKS(1000));
         }
@@ -154,62 +160,31 @@ void vSchedulerTask(void *pvParameters) {
 
 
 /* ---------------------------------------------------------------- */
-/* KİŞİ 2'NİN ALANI                                                 */
-/* (GENERIC TASK / İŞÇİ GÖREV)                                      */
+/* KİŞİ 2'NİN ALANI                         */
+/* (GENERIC TASK / İŞÇİ GÖREV)                   */
 /* ---------------------------------------------------------------- */
 /* GÖREV: Ekrana çıktı basan, işi yapan ve süresi bitince kendini   */
-/* silen 'vGenericTask' fonksiyonunu buraya yazacak.                */
+/* silen 'vGenericTask' fonksiyonunu buraya yazacak.         */
 /* ---------------------------------------------------------------- */
 
 void vGenericTask(void *pvParameters) {
-    /* * Task oluşturulurken parametre olarak kendi veri yapısının 
-     * adresi (TaskData_t*) gönderildiği varsayılmıştır.
-     */
-    TaskData_t *pxParams = (TaskData_t *) pvParameters;
-
-    if (pxParams == NULL) {
-        printf("HATA: Task parametresi NULL!\n");
-        vTaskDelete(NULL);
-    }
+    /* Parametreyi al (Task ismi vb. olabilir) */
+    // char *pcTaskName = (char *) pvParameters; (Örnek kullanım)
+    (void) pvParameters;
 
     for(;;) {
-        /* * 1. BEKLEME MODU (Blocking)
-         * Scheduler "xTaskNotifyGive" diyene kadar burada uyur.
-         * Bu sayede CPU'yu meşgul etmez.
-         */
-        ulTaskNotifyTake(pdTRUE, portMAX_DELAY);
+        // BURASI Kişi 2 TARAFINDAN DOLDURULACAK
 
-        /* * 2. İŞLEM MODU (Working)
-         * Uyandığında çalışır ve ekrana basar.
-         */
-        if (pxParams->remainingTime > 0) {
-            /* Renkli Çıktı Formatı */
-            // Not: Scheduler zaten 1 sn delay ve süre azaltma yaptığı için
-            // burada sadece durumu raporluyoruz.
-            printf("%s%s calisiyor. Kalan Sure: %d sn%s\n", 
-                   pxParams->pcColorCode, // schedule.h içinde tanımlı renk değişkeni
-                   pxParams->taskName, 
-                   pxParams->remainingTime, 
-                   ANSI_COLOR_RESET);
-        }
+        // Örnek (Dummy) Akış:
+        // 1. Scheduler'dan emir bekle: ulTaskNotifyTake(pdTRUE, portMAX_DELAY);
+        // 2. Ekrana yaz: printf("Task Calisiyor\n");
+        // 3. 1 sn bekle.
+        // 4. Süre bittiyse kendini sil: vTaskDelete(NULL);
+
+        printf("[Generic Task]: Emir bekliyorum... (Kişi 2 bekleniyor)\n");
         
-        /* * 3. BİTİŞ KONTROLÜ
-         * Eğer süre 0 veya altına indiyse görev tamamlanmıştır.
-         */
-        if (pxParams->remainingTime <= 0) {
-            printf("%s%s TAMAMLANDI ve task siliniyor.%s\n", 
-                   pxParams->pcColorCode, 
-                   pxParams->taskName, 
-                   ANSI_COLOR_RESET);
-            
-            // Görevi bellekten tamamen sil
-            vTaskDelete(NULL);
-        }
-        
-        /* * ÖNEMLİ NOT: 
-         * Buraya vTaskDelay(1000) KOYMUYORUZ. 
-         * Çünkü Scheduler (Kişi 1) zaten bizim yerimize zamanı sayıyor.
-         * Biz sadece "Uyan -> Yaz -> Uyu" döngüsündeyiz.
-         */
+        // Şimdilik kendini siliyoruz ki sonsuz döngüde ekranı kilitlemesin
+        vTaskDelay(pdMS_TO_TICKS(1000)); 
+        // vTaskDelete(NULL); // Gerçek kodda burada task silinecek veya askıya alınacak
     }
 }

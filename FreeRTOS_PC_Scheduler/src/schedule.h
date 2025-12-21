@@ -24,8 +24,7 @@ typedef struct {
     int priority;       // Öncelik (0: RealTime, 1, 2, 3: User)
     int burstTime;      // Toplam Çalışma Süresi
     int remainingTime;  // Kalan Süre (Simülasyon sırasında azalacak)
-    TaskHandle_t handle;
-    char *pcColorCode; // FreeRTOS Task Handle'ı (Kontrol için)
+    TaskHandle_t handle; // FreeRTOS Task Handle'ı (Kontrol için)
 } TaskData_t;
 
 // GLOBAL DEĞİŞKENLER (Extern ile diğer dosyalara "burada var" diyoruz)

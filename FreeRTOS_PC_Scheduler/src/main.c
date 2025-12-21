@@ -12,29 +12,11 @@
 #include "semphr.h"
 #include "schedule.h"
 
-#define COLOR_RED     "\x1b[31m"
-#define COLOR_GREEN   "\x1b[32m"
-#define COLOR_BLUE    "\x1b[34m"
-#define COLOR_YELLOW  "\x1b[33m"
-
 /* -----------------------------------------------------------
  * GLOBAL TANIMLAMALAR
  * ----------------------------------------------------------- */
 // Printf çakışmasını önlemek için Mutex kilidi
 SemaphoreHandle_t xPrintMutex;
-
-/* [ENTEGRASYON EKLEMESİ]
- * schedule.h dosyasında 'extern' olarak belirtilen değişkenlerin
- * bellekte fiziksel olarak oluşturulması (Allocation) burada yapılır.
- * Bu kısım olmazsa "undefined reference" hatası alırsınız.
- */
-TaskData_t allTasks[MAX_TASKS]; // schedule.h'daki MAX_TASKS kullanılır
-int globalTaskCount = 0;
-
-QueueHandle_t xQueue0;
-QueueHandle_t xQueue1;
-QueueHandle_t xQueue2;
-QueueHandle_t xQueue3;
 
 // Diğer dosyalarda yazılan Task fonksiyonlarını burada bildiriyoruz
 extern void vSchedulerTask(void *pvParameters);
@@ -72,7 +54,7 @@ int main(void)
     // 4. Scheduler (Yönetici) Görevini Oluştur (Kişi 1'in fonksiyonu)
     xTaskCreate(vSchedulerTask,    // Fonksiyon
                 "Scheduler",       // İsim
-                configMINIMAL_STACK_SIZE * 2, // Stack Boyutu (Printf için artırıldı)
+                configMINIMAL_STACK_SIZE, // Stack Boyutu
                 NULL,              // Parametre
                 tskIDLE_PRIORITY + 2, // FreeRTOS Önceliği (Scheduler en yüksek olmalı)
                 NULL);             // Handle
@@ -84,7 +66,7 @@ int main(void)
         // Her göreve kendi verisini parametre olarak gönderiyoruz (&allTasks[i])
         xTaskCreate(vGenericTask,
                     allTasks[i].taskName,   // Görev adı (T1, T2...)
-                    configMINIMAL_STACK_SIZE * 2, // Stack Boyutu (Güvenlik için artırıldı)
+                    configMINIMAL_STACK_SIZE, 
                     (void *)&allTasks[i],   // Parametre olarak struct adresi
                     tskIDLE_PRIORITY + 1,   // FreeRTOS önceliği (Yönetilmeye aday)
                     &allTasks[i].handle);   // Handle'ı struct içine kaydet
@@ -98,6 +80,8 @@ int main(void)
     // Kod buraya asla gelmemeli
     for(;;);
     return 0;
+
+    
 }
 
 /* FreeRTOS Stack Overflow (Yığın Taşması) yakalama fonksiyonu */
@@ -120,4 +104,3 @@ void vApplicationMallocFailedHook( void )
     fprintf(stderr, "[HATA] Memory Allocation Failed (Bellek Tahsisi Hatasi)!\n");
     for( ;; );
 }
-
