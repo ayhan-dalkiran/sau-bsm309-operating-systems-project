@@ -80,4 +80,27 @@ int main(void)
     // Kod buraya asla gelmemeli
     for(;;);
     return 0;
+
+    
+}
+
+/* FreeRTOS Stack Overflow (Yığın Taşması) yakalama fonksiyonu */
+void vApplicationStackOverflowHook( TaskHandle_t xTask, char *pcTaskName )
+{
+    /* Uyarı: Kullanılmayan parametre uyarısını engelle */
+    ( void ) pcTaskName;
+    ( void ) xTask;
+
+    /* Hata mesajı bas */
+    fprintf(stderr, "[HATA] Stack Overflow (Yigin Tasmasi) algilandi! Task: %s\n", pcTaskName);
+
+    /* Sistemi kilitle */
+    for( ;; );
+}
+
+/* Eğer malloc hatası da alırsan (şimdilik almıyorsun ama aklında olsun) */
+void vApplicationMallocFailedHook( void )
+{
+    fprintf(stderr, "[HATA] Memory Allocation Failed (Bellek Tahsisi Hatasi)!\n");
+    for( ;; );
 }
