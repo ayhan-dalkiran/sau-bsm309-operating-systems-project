@@ -2,6 +2,10 @@
 #include <stdlib.h>
 #include "schedule.h"
 
+#ifndef ANSI_COLOR_RESET
+#define ANSI_COLOR_RESET "\x1b[0m"
+#endif
+
 void loadTasksFromFile(const char *filename) {
     FILE *file = fopen(filename, "r");
     if(!file){ perror("Dosya açılamadı"); exit(1); }
@@ -38,6 +42,6 @@ void decreaseTaskPriority(TaskData_t *task, int simTime) {
     if(q) {
         task->queuedTime = simTime; // Kuyruğa yeniden eklendi, 20sn drop timer sıfırlandı
         xQueueSend(q, task, 0);
-        printf("Helper: %s görevinin önceliği düşürüldü ve Q%d'ye eklendi\n", task->taskName, task->priority);
+        printf("%s%d.0000 sn proses askıda        (id:%s    öncelik:%d    kalan süre:%d sn)%s\n", task->pcColorCode, simTime, task->taskName, task->priority, task->remainingTime, ANSI_COLOR_RESET);
     }
 }
