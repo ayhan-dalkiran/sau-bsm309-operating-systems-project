@@ -9,14 +9,6 @@
 #include <string.h>
 #include "schedule.h"
 
-// Global Değişkenlerin Tanımlanması (Hafızada yer ayrılması)
-QueueHandle_t xQueue0 = NULL;
-QueueHandle_t xQueue1 = NULL;
-QueueHandle_t xQueue2 = NULL;
-QueueHandle_t xQueue3 = NULL;
-
-TaskData_t allTasks[MAX_TASKS];
-int globalTaskCount = 0;
 
 /* * FONKSİYON: loadTasksFromFile
  * GÖREV: giris.txt dosyasını okur ve allTasks dizisine doldurur.
