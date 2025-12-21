@@ -19,10 +19,13 @@ typedef struct {
     int queuedTime; // Kuyruğa eklenme veya askıya alındığı zamanı tutar
 } TaskData_t;
 
-extern QueueHandle_t xQueue0; // Real-Time
-extern QueueHandle_t xQueue1; // High
-extern QueueHandle_t xQueue2; // Medium
-extern QueueHandle_t xQueue3; // Low (RR)
+extern QueueHandle_t xQueue0;
+extern QueueHandle_t xQueue1; 
+extern QueueHandle_t xQueue2; 
+extern QueueHandle_t xQueue3;
+extern QueueHandle_t xQueue4;
+extern QueueHandle_t xQueue5; 
+extern QueueHandle_t xQueue6; 
 
 extern TaskData_t allTasks[MAX_TASKS];
 extern int globalTaskCount;

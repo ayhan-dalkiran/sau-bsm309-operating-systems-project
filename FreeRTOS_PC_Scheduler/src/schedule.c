@@ -31,17 +31,20 @@ QueueHandle_t getQueueByPriority(int priority) {
         case 1: return xQueue1;
         case 2: return xQueue2;
         case 3: return xQueue3;
+        case 4: return xQueue4;
+        case 5: return xQueue5;
+        case 6: return xQueue6;
         default: return NULL;
     }
 }
 
 // Decrease priority ve yeniden kuyruk ekleme
 void decreaseTaskPriority(TaskData_t *task, int simTime) {
-    if(task->priority < 3) task->priority += 1;
+    task->priority += 1;
     QueueHandle_t q = getQueueByPriority(task->priority);
     if(q) {
         task->queuedTime = simTime; // Kuyruğa yeniden eklendi, 20sn drop timer sıfırlandı
         xQueueSend(q, task, 0);
-        printf("%s%d.0000 sn proses askıda        (id: %04d    öncelik: %d    kalan süre: %d sn)%s\n", task->pcColorCode, simTime, atoi(task->taskName), task->priority, task->remainingTime, ANSI_COLOR_RESET);
+        printf("%s%d.0000 sn Task%d proses askıda        (id: %04d    öncelik: %d    kalan süre: %d sn)%s\n", task->pcColorCode, simTime, atoi(task->taskName) + 1, atoi(task->taskName), task->priority, task->remainingTime, ANSI_COLOR_RESET);
     }
 }

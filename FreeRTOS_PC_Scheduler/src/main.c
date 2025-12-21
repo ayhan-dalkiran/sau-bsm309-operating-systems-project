@@ -20,7 +20,7 @@ SemaphoreHandle_t xPrintMutex;
 TaskData_t allTasks[MAX_TASKS];
 int globalTaskCount = 0;
 
-QueueHandle_t xQueue0, xQueue1, xQueue2, xQueue3;
+QueueHandle_t xQueue0, xQueue1, xQueue2, xQueue3 , xQueue4, xQueue5, xQueue6;
 
 extern void vSchedulerTask(void *pvParameters);
 extern void vGenericTask(void *pvParameters);
@@ -42,6 +42,9 @@ int main(void) {
     xQueue1 = xQueueCreate(10, sizeof(TaskData_t));
     xQueue2 = xQueueCreate(10, sizeof(TaskData_t));
     xQueue3 = xQueueCreate(10, sizeof(TaskData_t));
+    xQueue4 = xQueueCreate(10, sizeof(TaskData_t));
+    xQueue5 = xQueueCreate(10, sizeof(TaskData_t));
+    xQueue6 = xQueueCreate(10, sizeof(TaskData_t));
 
     // Renkleri önceden atayabilirsiniz ama xTaskCreate'i buradan kaldırın:
     for(int i=0; i<globalTaskCount; i++) {
