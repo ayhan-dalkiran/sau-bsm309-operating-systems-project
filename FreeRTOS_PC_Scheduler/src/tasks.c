@@ -1,4 +1,4 @@
-bu 1. kısım: bu tasks.c:/* DOSYA: tasks.c
+/* DOSYA: tasks.c
  * DURUM: GUNCEL GOREV DAGILIMINA UYGUN VE HATA DUZELTMELI
  * DİKKAT: Bu dosya projenin ana iskeletidir. 
  * Kişi 1 ve Kişi 2 kendi kodlarını buradaki ilgili blokların içine entegre etmiştir.

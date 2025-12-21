@@ -1,4 +1,4 @@
-bu main.c için :/*
+/*
  * DOSYA: main.c
  * SORUMLU: Kişi 4 (Entegrasyon & Config)
  * AÇIKLAMA: Sistemi başlatan, kuyrukları ve görevleri oluşturan ana dosya.
@@ -28,13 +28,13 @@ SemaphoreHandle_t xPrintMutex;
  * bellekte fiziksel olarak oluşturulması (Allocation) burada yapılır.
  * Bu kısım olmazsa "undefined reference" hatası alırsınız.
  */
-TaskData_t allTasks[MAX_TASKS]; // schedule.h'daki MAX_TASKS kullanılır
-int globalTaskCount = 0;
+//TaskData_t allTasks[MAX_TASKS]; // schedule.h'daki MAX_TASKS kullanılır
+//int globalTaskCount = 0;
 
-QueueHandle_t xQueue0;
-QueueHandle_t xQueue1;
-QueueHandle_t xQueue2;
-QueueHandle_t xQueue3;
+//QueueHandle_t xQueue0;
+//QueueHandle_t xQueue1;
+//QueueHandle_t xQueue2;
+//QueueHandle_t xQueue3;
 
 // Diğer dosyalarda yazılan Task fonksiyonlarını burada bildiriyoruz
 extern void vSchedulerTask(void *pvParameters);
