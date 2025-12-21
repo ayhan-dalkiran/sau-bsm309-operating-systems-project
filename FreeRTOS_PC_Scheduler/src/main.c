@@ -1,11 +1,4 @@
-bu main.c için :/*
- * DOSYA: main.c
- * SORUMLU: Kişi 4 (Entegrasyon & Config)
- * AÇIKLAMA: Sistemi başlatan, kuyrukları ve görevleri oluşturan ana dosya.
- */
-
 #include <stdio.h>
-#include <stdlib.h>
 #include "FreeRTOS.h"
 #include "task.h"
 #include "queue.h"
@@ -17,106 +10,66 @@ bu main.c için :/*
 #define COLOR_BLUE    "\x1b[34m"
 #define COLOR_YELLOW  "\x1b[33m"
 
-/* -----------------------------------------------------------
- * GLOBAL TANIMLAMALAR
- * ----------------------------------------------------------- */
-// Printf çakışmasını önlemek için Mutex kilidi
 SemaphoreHandle_t xPrintMutex;
 
-/* [ENTEGRASYON EKLEMESİ]
- * schedule.h dosyasında 'extern' olarak belirtilen değişkenlerin
- * bellekte fiziksel olarak oluşturulması (Allocation) burada yapılır.
- * Bu kısım olmazsa "undefined reference" hatası alırsınız.
- */
-TaskData_t allTasks[MAX_TASKS]; // schedule.h'daki MAX_TASKS kullanılır
+TaskData_t allTasks[MAX_TASKS];
 int globalTaskCount = 0;
 
-QueueHandle_t xQueue0;
-QueueHandle_t xQueue1;
-QueueHandle_t xQueue2;
-QueueHandle_t xQueue3;
+QueueHandle_t xQueue0, xQueue1, xQueue2, xQueue3;
 
-// Diğer dosyalarda yazılan Task fonksiyonlarını burada bildiriyoruz
 extern void vSchedulerTask(void *pvParameters);
 extern void vGenericTask(void *pvParameters);
 
-/* -----------------------------------------------------------
- * MAIN FONKSİYONU
- * ----------------------------------------------------------- */
-int main(void)
-{
-    // 1. Konsol çıktısı için Mutex oluştur
+int main(void) {
     xPrintMutex = xSemaphoreCreateMutex();
 
-    if(xPrintMutex != NULL) {
+    if(xPrintMutex) {
         xSemaphoreTake(xPrintMutex, portMAX_DELAY);
         printf("--- SISTEM BASLATILIYOR ---\n");
         xSemaphoreGive(xPrintMutex);
     }
 
-    // 2. Dosyadan Görevleri Oku (Kişi 3'ün yazdığı fonksiyon)
     loadTasksFromFile("giris.txt");
 
-    // 3. Kuyrukları Oluştur (Her biri 10 adet TaskData_t taşıyabilir)
-    // Kuyruklar schedule.c içinde tanımlandı, burada create ediyoruz.
-    xQueue0 = xQueueCreate(10, sizeof(TaskData_t)); // Real-Time
-    xQueue1 = xQueueCreate(10, sizeof(TaskData_t)); // High
-    xQueue2 = xQueueCreate(10, sizeof(TaskData_t)); // Medium
-    xQueue3 = xQueueCreate(10, sizeof(TaskData_t)); // Low (RR)
+    xQueue0 = xQueueCreate(10, sizeof(TaskData_t));
+    xQueue1 = xQueueCreate(10, sizeof(TaskData_t));
+    xQueue2 = xQueueCreate(10, sizeof(TaskData_t));
+    xQueue3 = xQueueCreate(10, sizeof(TaskData_t));
 
-    if(xQueue0 == NULL || xQueue1 == NULL || xQueue2 == NULL || xQueue3 == NULL) {
-        printf("HATA: Kuyruklar olusturulamadi! Bellek yetersiz olabilir.\n");
+    if(!xQueue0 || !xQueue1 || !xQueue2 || !xQueue3) {
+        printf("HATA: Kuyruklar olusturulamadi!\n");
         return -1;
     }
 
-    // 4. Scheduler (Yönetici) Görevini Oluştur (Kişi 1'in fonksiyonu)
-    xTaskCreate(vSchedulerTask,    // Fonksiyon
-                "Scheduler",       // İsim
-                configMINIMAL_STACK_SIZE * 2, // Stack Boyutu (Printf için artırıldı)
-                NULL,              // Parametre
-                tskIDLE_PRIORITY + 2, // FreeRTOS Önceliği (Scheduler en yüksek olmalı)
-                NULL);             // Handle
+    xTaskCreate(vSchedulerTask, "Scheduler", configMINIMAL_STACK_SIZE*2, NULL, tskIDLE_PRIORITY + 2, NULL);
 
-    // 5. İşçi (Generic) Görevleri Oluştur (Kişi 2'nin fonksiyonu)
-    // giris.txt'den okunan her satır için bir FreeRTOS görevi yaratıyoruz.
-    for(int i = 0; i < globalTaskCount; i++) {
-        
-        // Her göreve kendi verisini parametre olarak gönderiyoruz (&allTasks[i])
-        xTaskCreate(vGenericTask,
-                    allTasks[i].taskName,   // Görev adı (T1, T2...)
-                    configMINIMAL_STACK_SIZE * 2, // Stack Boyutu (Güvenlik için artırıldı)
-                    (void *)&allTasks[i],   // Parametre olarak struct adresi
-                    tskIDLE_PRIORITY + 1,   // FreeRTOS önceliği (Yönetilmeye aday)
-                    &allTasks[i].handle);   // Handle'ı struct içine kaydet
+    for(int i=0; i<globalTaskCount; i++) {
+        char* color;
+        switch(i%4){
+            case 0: color=COLOR_RED; break;
+            case 1: color=COLOR_GREEN; break;
+            case 2: color=COLOR_BLUE; break;
+            case 3: color=COLOR_YELLOW; break;
+        }
+        allTasks[i].pcColorCode = color;
+
+        xTaskCreate(vGenericTask, allTasks[i].taskName, configMINIMAL_STACK_SIZE*2, (void*)&allTasks[i], tskIDLE_PRIORITY+1, &allTasks[i].handle);
     }
 
-    printf("Main: Tum gorevler olusturuldu. Scheduler baslatiliyor...\n");
-
-    // 6. FreeRTOS Zamanlayıcıyı Başlat
+    printf("Main: Tum görevler olusturuldu. Scheduler başlatılıyor...\n");
     vTaskStartScheduler();
 
-    // Kod buraya asla gelmemeli
     for(;;);
     return 0;
 }
 
-/* FreeRTOS Stack Overflow (Yığın Taşması) yakalama fonksiyonu */
-void vApplicationStackOverflowHook( TaskHandle_t xTask, char *pcTaskName )
-{
-    /* Uyarı: Kullanılmayan parametre uyarısını engelle */
-    ( void ) pcTaskName;
-    ( void ) xTask;
-
-    /* Hata mesajı bas */
-    fprintf(stderr, "[HATA] Stack Overflow (Yigin Tasmasi) algilandi! Task: %s\n", pcTaskName);
-
-    /* Sistemi kilitle */
-    for( ;; );
+void vApplicationStackOverflowHook(TaskHandle_t xTask, char *pcTaskName) {
+    (void)xTask; (void)pcTaskName;
+    fprintf(stderr, "[HATA] Stack Overflow: %s\n", pcTaskName);
+    for(;;);
 }
 
-/* Eğer malloc hatası da alırsan (şimdilik almıyorsun ama aklında olsun) */
-void vApplicationMallocFailedHook( void )
-{
-    fprintf(stderr, "[HATA] Memory Allocation Failed (Bellek Tahsisi Hatasi)!\n");
-    for( ;; );
+void vApplicationMallocFailedHook(void) {
+    fprintf(stderr, "[HATA] Memory Allocation Failed!\n");
+    for(;;);
 }
